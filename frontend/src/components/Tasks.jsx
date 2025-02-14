@@ -1,27 +1,33 @@
 import { useState, useEffect } from "react";
 
+const API_BASE_URL = import.meta.env.MODE === "development"
+  ? "http://localhost:5000"
+  : import.meta.env.VITE_BACKEND_URL;  // Use Render URL in production
+
 const Tasks = () => {
   const [tasks, setTasks] = useState([]);
-  const [newTask, setNewTask] = useState("");  //  State for new task input
+  const [newTask, setNewTask] = useState("");  
   const token = localStorage.getItem("token");
 
   useEffect(() => {
     if (!token) return;
 
-    fetch("http://localhost:5000/api/tasks", {
+    fetch(`${API_BASE_URL}/api/tasks`, {
       headers: { Authorization: `Bearer ${token}` },
     })
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
+        return res.json();
+      })
       .then((data) => setTasks(data))
-      .catch((err) => console.error(" Error fetching tasks:", err));
+      .catch((err) => console.error("Error fetching tasks:", err.message));
   }, [token]);
 
-  //  Function to add a new task
   const handleAddTask = async () => {
     if (!newTask.trim()) return alert("Task cannot be empty!"); 
 
     try {
-      const response = await fetch("http://localhost:5000/api/tasks", {
+      const response = await fetch(`${API_BASE_URL}/api/tasks`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -30,13 +36,16 @@ const Tasks = () => {
         body: JSON.stringify({ title: newTask }),
       });
 
-      if (!response.ok) throw new Error("Failed to add task");
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to add task: ${errorText}`);
+      }
 
       const task = await response.json();
-      setTasks([...tasks, task]); //  Update UI with new task
-      setNewTask(""); //  Clear input field
+      setTasks([...tasks, task]);
+      setNewTask("");  
     } catch (error) {
-      console.error(" Error adding task:", error);
+      console.error("Error adding task:", error.message);
     }
   };
 
@@ -45,16 +54,14 @@ const Tasks = () => {
       <h2>Your Tasks</h2>
       {token ? (
         <>
-          {/*  Input field to add tasks */}
           <input
             type="text"
             placeholder="Enter a new task..."
             value={newTask}
             onChange={(e) => setNewTask(e.target.value)}
           />
-          <button onClick={handleAddTask}> Add Task</button>
+          <button onClick={handleAddTask}>Add Task</button>
 
-          {/*  Display existing tasks */}
           <ul>
             {tasks.map((task) => (
               <li key={task._id}>{task.title}</li>
@@ -62,7 +69,7 @@ const Tasks = () => {
           </ul>
         </>
       ) : (
-        <p> Please log in to see tasks</p>
+        <p>Please log in to see tasks</p>
       )}
     </div>
   );
