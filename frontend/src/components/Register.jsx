@@ -33,12 +33,16 @@ function Register() {
     <div>
       <h2>Register</h2>
       <input
+        id="username"
+        name="username"
         type="text"
         placeholder="Username"
         value={username}
         onChange={(e) => setUsername(e.target.value)}
       />
       <input
+        id="password"
+        name="password"
         type="password"
         placeholder="Password"
         value={password}

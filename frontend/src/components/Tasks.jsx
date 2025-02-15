@@ -1,8 +1,6 @@
 import { useState, useEffect } from "react";
 
-const API_BASE_URL = import.meta.env.MODE === "development"
-  ? "http://localhost:5000"
-  : import.meta.env.VITE_BACKEND_URL;  // Use Render URL in production
+const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
 
 const Tasks = () => {
   const [tasks, setTasks] = useState([]);
@@ -13,7 +11,11 @@ const Tasks = () => {
     if (!token) return;
 
     fetch(`${API_BASE_URL}/api/tasks`, {
-      headers: { Authorization: `Bearer ${token}` },
+      headers: {
+        "Content-Type": "application/json; charset=utf-8",
+        Authorization: `Bearer ${token}`,
+      },
+      
     })
       .then((res) => {
         if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
@@ -56,6 +58,8 @@ const Tasks = () => {
         <>
           <input
             type="text"
+            id="task-input"
+            name="task"
             placeholder="Enter a new task..."
             value={newTask}
             onChange={(e) => setNewTask(e.target.value)}
